@@ -32,6 +32,10 @@ An enterprise-grade multi-agent RAG and customer intelligence platform built for
   SQLite (orders/    SQLite (catalog
    complaints)        ~900 shoes)
 ```
+<img width="825" height="552" alt="Screenshot 2026-09-24 232212" src="https://github.com/user-attachments/assets/9f148896-ec89-46b7-9e85-da8bbfdc9c4b" />
+<img width="1916" height="856" alt="Screenshot 2026-09-24 222515" src="https://github.com/user-attachments/assets/6c8a341f-5a0f-4d22-83ca-108234d24902" />
+<img width="763" height="681" alt="Screenshot 2026-09-24 222655" src="https://github.com/user-attachments/assets/c298b8e8-054d-42de-ab6d-e2d4e9c1eebe" />
+<img width="1828" height="861" alt="Screenshot 2026-09-24 222721" src="https://github.com/user-attachments/assets/3e3e35d7-338a-4fce-b7ef-8b19ffcaf90d" />
 
 ---
 
