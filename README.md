@@ -1,4 +1,4 @@
-# 👟 ShoeShack — Enterprise Agentic RAG Ecommerce Platform
+# 👟 ShoeShack — Enterprise Agentic RAG with MCP Ecommerce Platform
 
 An enterprise-grade multi-agent RAG and customer intelligence platform built for modern ecommerce. ShoeShack combines a **LangGraph ReAct orchestrator**, a **FastMCP Model Context Protocol server**, a dedicated **NL-to-SQL agent with query guardrails**, and **semantic FAQ retrieval via ChromaDB**, accessible through both a sleek **React Web UI** and a **Streamlit application**.
 
