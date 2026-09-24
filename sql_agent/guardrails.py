@@ -13,7 +13,7 @@ BLOCKED_PATTERNS = [
 
 REDACT_FIELDS = {
     "email", "phone", "address", "password", "user_id"
-} #  "product_link",
+}
 MAX_ROWS = 5
 
 

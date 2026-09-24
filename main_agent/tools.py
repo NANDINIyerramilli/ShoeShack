@@ -50,17 +50,14 @@ def call_sql_agent(query: str, user_id: str) -> str:
     Example: "show shoes under 5000".
     """
     try:
-        print('sql:', query)
         response = requests.post(
             SQL_AGENT_URL,
             json={"query": query, "user_id": user_id},
             timeout=30,
         )
-        print(response)
         response.raise_for_status()
-
-        print(str(response.json().get("response", response.json())))
-        return str(response.json().get("response", response.json()))
+        data = response.json()
+        return str(data.get("response", data))
     except Exception as e:
         return f"SQL agent error: {e}"
 

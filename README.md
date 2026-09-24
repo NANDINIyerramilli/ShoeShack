@@ -1,326 +1,310 @@
-# ShoeShack - Enterprise Agentic RAG Ecommerce Chatbot
+# 👟 ShoeShack — Enterprise Agentic RAG Ecommerce Platform
 
-Enterprise-grade multi-agent RAG architecture for ecommerce customer support and product intelligence.
-
-Built with:
-
-LangGraph
-LangChain
-Groq Cloud API
-FastMCP
-ChromaDB
-Sentence-Transformers
-SQLite
-FastAPI & Uvicorn
-React 18 & Vite
-Streamlit
-External Tool APIs
-Astral UV & npm
+An enterprise-grade multi-agent RAG and customer intelligence platform built for modern ecommerce. ShoeShack combines a **LangGraph ReAct orchestrator**, a **FastMCP Model Context Protocol server**, a dedicated **NL-to-SQL agent with query guardrails**, and **semantic FAQ retrieval via ChromaDB**, accessible through both a sleek **React Web UI** and a **Streamlit application**.
 
 ---
 
-# Architecture
-<img width="825" height="552" alt="image" src="https://github.com/user-attachments/assets/48d01e4a-a844-49b8-b4a7-168f25ddc64b" />
-<img width="1916" height="856" alt="Screenshot 2026-09-24 222515" src="https://github.com/user-attachments/assets/08f77cc1-8989-4959-a278-7af6dc5dcab7" />
-<img width="763" height="681" alt="Screenshot 2026-09-24 222655" src="https://github.com/user-attachments/assets/80ca0d56-59eb-4bc4-82ef-4c0e4db54d2c" />
-<img width="1828" height="861" alt="Screenshot 2026-09-24 222721" src="https://github.com/user-attachments/assets/a4f1c860-b499-464f-bb62-5b095bdfec52" />
+## 🏗️ Architecture Overview
 
-
-
-The Main Agent is a real LangGraph **ReAct** loop. The LLM decides which of the 7 tools to call:
-
-| Tool             | Backend                                   |
-| ---------------- | ----------------------------------------- |
-| `search_faq`     | ChromaDB + `all-MiniLM-L6-v2`             |
-| `web_search`     | DuckDuckGo                                |
-| `wikipedia`      | Wikipedia API                             |
-| `arxiv`          | ArXiv API                                 |
-| `call_sql_agent` | HTTP POST → `sql_agent` (`:8002`)         |
-| `get_orders`     | MCP `fetch_orders` (SSE `:8001`)          |
-| `get_complaints` | MCP `fetch_complaints` (SSE `:8001`)      |
-
-The SQL agent backs a Flipkart-style shoes catalog (~900 rows in
-`sql_agent/db.sqlite`, table `product`) — see
-[SQL Agent Pipeline](#sql-agent-pipeline) for the schema.
+```text
+                       ┌─────────────────────────────────────────┐
+                       │               User Client               │
+                       │   React Web UI (:8000) / Streamlit (:8501)│
+                       └────────────────────┬────────────────────┘
+                                            │ HTTP / JSON
+                                            ▼
+                       ┌─────────────────────────────────────────┐
+                       │         Main Orchestrator Agent         │
+                       │        FastAPI + LangGraph ReAct        │
+                       │           (Groq LLM Engine)             │
+                       └────────────────────┬────────────────────┘
+                                            │
+         ┌──────────────────┬───────────────┴───────────────┬──────────────────┐
+         │                  │                               │                  │
+         ▼                  ▼                               ▼                  ▼
+  ┌─────────────┐    ┌──────────────┐                ┌─────────────┐    ┌──────────────┐
+  │ MCP Server  │    │  SQL Agent   │                │  RAG Engine │    │  Live Tools  │
+  │ Orders &    │    │  Product DB  │                │  Policy FAQ │    │  DuckDuckGo  │
+  │ Complaints  │    │  NL → SQL    │                │  ChromaDB   │    │  Wikipedia   │
+  │ SSE :8001   │    │  HTTP :8002  │                │  MiniLM-L6  │    │  ArXiv       │
+  └──────┬──────┘    └──────┬───────┘                └─────────────┘    └──────────────┘
+         ▼                  ▼
+  SQLite (orders/    SQLite (catalog
+   complaints)        ~900 shoes)
+```
 
 ---
 
-# Prerequisites
+## 🌟 Key Capabilities
 
-* Python 3.11+
-* UV package manager
-* A GROQ API key
+| Tool | Backend & Transport | Primary Purpose |
+| :--- | :--- | :--- |
+| **`call_sql_agent`** | HTTP POST (`:8002`) → SQLite | Natural language queries for sneakers, prices, brands, ratings, and discounts. |
+| **`get_orders`** | FastMCP Client (SSE `:8001`) | Fetches real-time customer order history and order tracking status. |
+| **`get_complaints`** | FastMCP Client (SSE `:8001`) | Looks up active customer support tickets, status, and priorities. |
+| **`search_faq`** | ChromaDB + `all-MiniLM-L6-v2` | Dense vector semantic search for store policies, shipping, returns, and refunds. |
+| **`web_search`** | DuckDuckGo Search API | Fetches live public web information and external current deals. |
+| **`wikipedia`** | Wikipedia API Wrapper | Encyclopedic queries, brand histories, and sneaker culture knowledge. |
+| **`arxiv`** | ArXiv Search Client | Research papers on recommendation systems, materials, and algorithms. |
 
+---
+
+## 🛠️ Technology Stack
+
+- **Orchestration**: [LangChain](https://www.langchain.com/), [LangGraph](https://github.com/langchain-ai/langgraph) (ReAct loop)
+- **Language Models**: [Groq](https://groq.com/) (`openai/gpt-oss-120b` or `llama-3.3-70b-versatile`)
+- **Protocol**: [FastMCP](https://github.com/jlowin/fastmcp) (Server-Sent Events)
+- **Databases**: SQLite (Product catalog & orders/tickets)
+- **Vector Store**: [ChromaDB](https://www.trychroma.com/) with Sentence Transformers (`all-MiniLM-L6-v2`)
+- **Backends**: [FastAPI](https://fastapi.tiangolo.com/), Uvicorn
+- **Frontends**:
+  - Modern React 18 + Vite (Responsive chat dock, dark aesthetic, live link previews)
+  - Streamlit (Fast prototyping & debug dashboard)
+- **Package Management**: [Astral UV](https://docs.astral.sh/uv/) workspace
+
+---
+
+## 📋 Prerequisites
+
+- **Python 3.11+**
+- **Node.js 18+** & **npm** (for building or developing the frontend)
+- **[UV package manager](https://astral.sh/uv/)**
+- **Groq API Key** ([Get one here](https://console.groq.com/keys))
+
+Install UV:
 ```bash
-# Install UV (macOS / Linux)
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# macOS / Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ---
 
-# Setup
+## ⚙️ Installation & Setup
 
-## 1. Clone
+### 1. Configure Environment Variables
 
-```bash
-git clone <repo-url>
-cd ecomm_chatbot
-```
-
-## 2. Create `.env` at the project root
+Create a `.env` file in the project root:
 
 ```env
-GROQ_API_KEY=your_groq_api_key
+GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=openai/gpt-oss-120b
 
-LANGSMITH_API_KEY=your_langsmith_key
+# Optional LangSmith Tracing
+LANGCHAIN_TRACING_V2=false
+LANGSMITH_API_KEY=
 LANGSMITH_PROJECT=enterprise-rag
-LANGCHAIN_TRACING_V2=true
 ```
 
-## 3. Install dependencies
+### 2. Install Python Dependencies
+
+Using `uv`, sync all dependencies across workspace packages:
 
 ```bash
 uv sync
 ```
 
-## 4. Seed the databases
+### 3. Seed Databases & Ingest FAQ Knowledge Base
 
 ```bash
-# MCP orders + tickets
-cd mcp_server && uv run --package mcp_server python seed_data.py && cd ..
+# Seed MCP orders and complaints database
+uv run python mcp_server/seed_data.py
 
-# Product catalog — loads sql_agent/products.csv into the `product` table
-cd sql_agent && uv run --package sql_agent python seed_data.py && cd ..
+# Seed SQLite product catalog from products.csv (~900 items)
+uv run python sql_agent/seed_data.py
+
+# Ingest FAQ into ChromaDB vector store
+uv run python rag/ingest.py
 ```
 
-## 5. Ingest the FAQ collection
+### 4. Build Frontend (React / Vite)
 
 ```bash
-cd rag && uv run --package rag python ingest.py && cd ..
+cd frontend
+npm install
+npm run build
+cd ..
 ```
 
-This builds `rag/chroma_db/` using `all-MiniLM-L6-v2` (384-dim embeddings).
+The compiled assets are placed into `frontend/dist/` and served automatically by the FastAPI backend on port 8000.
 
 ---
 
-# Running the system
+## 🚀 Running the Platform
 
-Open three terminals for the services, plus a fourth for the UI.
+To run the complete platform, start the three core microservices in separate terminals:
 
-## Terminal 1 — MCP Server (port 8001, SSE)
-
+### Terminal 1 — MCP Server (Port 8001, SSE)
 ```bash
-cd mcp_server && uv run --package mcp_server python server.py
+uv run python mcp_server/server.py
 ```
+*Listens on `http://localhost:8001/sse`*
 
-## Terminal 2 — SQL Agent (port 8002, HTTP)
-
+### Terminal 2 — SQL Agent Service (Port 8002, HTTP)
 ```bash
-cd sql_agent && uv run --package sql_agent python server.py
+uv run python sql_agent/server.py
 ```
+*Listens on `http://localhost:8002`*
 
-## Terminal 3 — Main Agent (CLI)
-
+### Terminal 3 — Main Agent API & React Web UI (Port 8000)
 ```bash
-uv run --package main_agent python -m main_agent.agent
+uv run python -m uvicorn main_agent.api:app --host 0.0.0.0 --port 8000
 ```
-
-## Terminal 4 — Streamlit UI
-
-```bash
-uv run streamlit run main_agent/ui/app.py
-```
-
-> **Important:** the UI must be launched with `streamlit run`. Running
-> `python main_agent/ui/app.py` directly will fail because Streamlit needs to
-> bootstrap its own runtime.
-
-The UI opens at `http://localhost:8501`.
+*Open your browser at **`http://localhost:8000`** to access the web application!*
 
 ---
 
-# Example Queries
+### Alternative Interfaces
 
-| Query                                                      | Tool the agent should pick |
-| ---------------------------------------------------------- | -------------------------- |
-| `"Show me running shoes under ₹1500"`                      | `call_sql_agent`           |
-| `Find top-rated Nike shoes with more than 30% discount`    | `call_sql_agent`           |
-| `Show my orders`                                           | `get_orders`               |
-| `Any complaints on my account?`                            | `get_complaints`           |
-| `What is your return policy for damaged items?`            | `search_faq`               |
-| `Current best Black Friday deals on TVs?`                  | `web_search`               |
+- **Streamlit Interface** (Port 8501):
+  ```bash
+  uv run streamlit run main_agent/ui/app.py --server.port 8501
+  ```
+  *Accessible at `http://localhost:8501`*
+
+- **Frontend Hot-Reload Dev Server** (Port 3000):
+  ```bash
+  cd frontend && npm run dev
+  ```
+  *Proxies API requests to `http://localhost:8000`*
+
+- **CLI Direct Chat**:
+  ```bash
+  uv run python -m main_agent.agent
+  ```
 
 ---
 
-# SQL Agent Pipeline
+## 🔒 Security & SQL Guardrails
+
+The SQL Agent uses a multi-tier safety pipeline before queries ever execute against the database:
 
 ```text
-input_guardrails → sql_generator (GROQ) → query_executor → output_guardrails → response_formatter
+User Natural Language Query
+          │
+          ▼
+   [input_guardrails]   ──► Blocks DROP, DELETE, UPDATE, INSERT, ALTER, UNION, comments (--)
+          │
+          ▼
+   [sql_generator]      ──► Generates strict single-statement SELECT via Groq LLM
+          │
+          ▼
+   [query_executor]     ──► Validates SQL AST; executes read-only query
+          │
+          ▼
+  [output_guardrails]   ──► Enforces MAX_ROWS (5) & redacts sensitive fields
+          │
+          ▼
+ [response_formatter]   ──► Structured markdown output with direct links
 ```
-
-User Query: "Find Campus running shoes under 1500"
-                      │
-                      ▼
-       ┌──────────────────────────────┐
-       │   1. input_guardrails        │  ◄── Blocks SQL injection & DDL/DML keywords
-       └──────────────┬───────────────┘
-                      ▼
-       ┌──────────────────────────────┐
-       │   2. sql_generator (Groq)    │  ◄── Generates SQL using schema-aware prompt
-       └──────────────┬───────────────┘
-                      ▼
-       ┌──────────────────────────────┐
-       │   3. query_executor          │  ◄── Re-validates SELECT-only & executes in SQLite
-       └──────────────┬───────────────┘
-                      ▼
-       ┌──────────────────────────────┐
-       │   4. output_guardrails       │  ◄── Caps at 5 rows & redacts sensitive fields
-       └──────────────┬───────────────┘
-                      ▼
-       ┌──────────────────────────────┐
-       │   5. response_formatter      │  ◄── Returns clean records to the orchestrator
-       └──────────────┬───────────────┘
-                      ▼
-             Final Result / Table
-
-
-## Catalog schema
-
-The agent queries a single `product` table in
-[sql_agent/db.sqlite](sql_agent/db.sqlite):
-
-```sql
-CREATE TABLE product (
-    "index"        INTEGER,
-    product_link   TEXT,
-    title          TEXT,
-    brand          TEXT,
-    price          INTEGER,   -- INR
-    discount       REAL,      -- fraction, e.g. 0.25 = 25% off
-    avg_rating     REAL,      -- 0.0–5.0
-    total_ratings  INTEGER
-);
-```
-
-The seed data lives next to the script at [sql_agent/products.csv](sql_agent/products.csv)
-(~900 rows, Flipkart shoes/sports footwear).
 
 ---
 
-# MCP Tools
+## 💬 Sample User Queries
 
-| Tool               | Description                |
-| ------------------ | -------------------------- |
-| `fetch_orders`     | Orders for a given user_id |
-| `fetch_complaints` | Tickets for a given user_id|
-
-Exposed by [mcp_server/server.py](mcp_server/server.py) over SSE.
+| Intent | Sample Prompt | Dispatched Tool |
+| :--- | :--- | :--- |
+| **Product Discovery** | *"Find Campus running shoes under ₹1500"* | `call_sql_agent` |
+| **Catalog Details** | *"Show me top-rated Nike sneakers with discount"* | `call_sql_agent` |
+| **Order Status** | *"What is the status of my recent orders?"* | `get_orders` |
+| **Customer Support** | *"Do I have any open support complaints?"* | `get_complaints` |
+| **Policy Questions** | *"What is your return and refund window?"* | `search_faq` |
+| **Current Deals** | *"What are the best current sneaker deals?"* | `web_search` |
+| **Sneaker History** | *"Who founded Nike and in which year?"* | `wikipedia` |
 
 ---
 
-# Project Layout
+## 📁 Project Structure
 
 ```text
-Enterprise-Agentic-RAG-Ecomm-Chatbot-main/
-│
-├──  frontend/                     # Modern React 18 + Vite User Interface
-│   ├──  dist/                     # Production build bundle (served by FastAPI at :8000)
-│   ├──  public/                   # Static assets
-│   │   └── background.jpg           # Hero sneaker backdrop image
-│   ├──  src/
-│   │   ├── App.jsx                  # Main chat interface, link previews & markdown rendering
-│   │   ├── index.css                # Glassmorphic dark editorial UI styling
-│   │   └── main.jsx                 # React root mount
-│   ├── index.html                   # HTML template with Google Fonts (Inter & Plus Jakarta Sans)
-│   ├── package.json                 # Node dependencies (lucide-react, react-markdown, remark-gfm)
-│   └── vite.config.js               # Dev server configuration with API proxy to port 8000
-│
-├──  main_agent/                   # Central ReAct Orchestrator & API Server
-│   ├── agent.py                     # Interactive CLI loop for terminal chatting
-│   ├── api.py                       # FastAPI application (:8000); serves API + React build
-│   ├── graph.py                     # LangGraph ReAct loop with singleton agent caching
-│   ├── prompts.py                   # Main system prompt & tool selection rules
-│   ├── tools.py                     # 7 LangChain tool definitions + FastMCP SSE client
-│   └──  ui/
-│       └── app.py                   # Alternative Streamlit chat interface (:8501)
-│
-├──  mcp_server/                   # Model Context Protocol (FastMCP) Service
-│   ├── database.py                  # SQLite query handlers for orders and tickets
-│   ├── models.py                    # Pydantic schemas (Order, Ticket)
-│   ├── orders_complaints.db         # SQLite database storing customer orders and tickets
-│   ├── seed_data.py                 # Mock database generator using Faker
-│   └── server.py                    # FastMCP SSE service running on port 8001
-│
-├──  sql_agent/                    # Natural Language to SQL Product Catalog Agent
-│   ├── agent.py                     # Execution wrapper for the SQL pipeline
-│   ├── database.py                  # SQLite connection and query execution helper
-│   ├── db.sqlite                    # Product catalog database (~900 shoes)
-│   ├── graph.py                     # Multi-step LangGraph SQL generation pipeline
-│   ├── guardrails.py                # SQL security: input sanitization, SELECT-only, redaction
-│   ├── products.csv                 # Raw dataset (Flipkart footwear catalog)
-│   ├── prompts.py                   # Catalog schema instructions for Groq LLM
-│   ├── seed_data.py                 # Loads products.csv into db.sqlite
-│   └── server.py                    # FastAPI microservice running on port 8002
-│
-├──  rag/                          # Semantic Policy & FAQ Retrieval Engine
-│   ├── chroma_db/                # Local persistent Chroma vector store
-│   ├── faq.csv                      # Store policies, returns, refunds, and shipping Q&As
-│   ├── ingest.py                    # Embeds faq.csv using all-MiniLM-L6-v2 into ChromaDB
-│   └── retriever.py                 # Vector similarity search interface
-│
-├──  tools/                        # External Live Search & Knowledge Tools
-│   ├── arxiv_tool.py                # ArXiv academic research search wrapper
-│   ├── web_search.py                # Live web queries via DuckDuckGo
-│   └── wikipedia_tool.py            # Encyclopedic definitions and brand history
-│
-├── .env                             # Environment configuration (GROQ_API_KEY, GROQ_MODEL)
+Enterprise-Agentic-RAG-Ecomm-Chatbot/
 ├── .env.example                     # Environment template
-├── .gitignore                       # Git ignore rules (.venv, dist, .env, chroma_db, etc.)
-├── pyproject.toml                   # Root UV workspace definition
-├── uv.lock                          # Locked dependencies snapshot
-├── README.md                        # Documentation and setup guide
-└── Technical_Design_Document.md     # Architecture specifications
-
+├── pyproject.toml                   # Root UV workspace configuration
+├── README.md                        # Documentation
+├── Technical_Design_Document.md     # Architecture specifications
+│
+├── frontend/                        # Modern React + Vite Web UI
+│   ├── dist/                        # Production build bundle
+│   ├── public/                      # Static assets (background image)
+│   ├── src/
+│   │   ├── App.jsx                  # Main chat interface component
+│   │   ├── index.css                # Dark editorial glassmorphism styling
+│   │   └── main.jsx                 # React root mount
+│   ├── package.json
+│   └── vite.config.js               # Dev server proxy configuration
+│
+├── main_agent/                      # Orchestration service
+│   ├── agent.py                     # CLI interactive loop
+│   ├── api.py                       # FastAPI entrypoint (serves API & dist)
+│   ├── graph.py                     # ReAct orchestrator loop & caching
+│   ├── prompts.py                   # System prompt & tool routing rules
+│   ├── tools.py                     # Tool definitions & MCP client integration
+│   └── ui/                          # Streamlit application
+│       └── app.py
+│
+├── mcp_server/                      # FastMCP Service
+│   ├── database.py                  # Orders & complaints queries
+│   ├── models.py                    # Data schemas
+│   ├── orders_complaints.db         # SQLite storage for orders and tickets
+│   ├── seed_data.py                 # Mock data generator (Faker)
+│   └── server.py                    # FastMCP SSE server (:8001)
+│
+├── sql_agent/                       # NL-to-SQL Product Catalog Agent
+│   ├── agent.py                     # Service invocation wrapper
+│   ├── database.py                  # SQLite query executor
+│   ├── db.sqlite                    # Shoes catalog database (~900 rows)
+│   ├── graph.py                     # LangGraph SQL pipeline
+│   ├── guardrails.py                # SQL validation, AST checks, redactions
+│   ├── products.csv                 # Raw catalog source
+│   ├── prompts.py                   # Schema instructions
+│   ├── seed_data.py                 # CSV -> SQLite seeder
+│   └── server.py                    # FastAPI service (:8002)
+│
+├── rag/                             # Semantic Retrieval Engine
+│   ├── chroma_db/                   # Chroma vector embeddings store
+│   ├── faq.csv                      # Ecommerce policy Q&A dataset
+│   ├── ingest.py                    # Embedding indexing script
+│   └── retriever.py                 # SentenceTransformer vector retriever
+│
+└── tools/                           # Live External Tools
+    ├── arxiv_tool.py                # Academic paper retrieval
+    ├── web_search.py                # DuckDuckGo integration
+    └── wikipedia_tool.py            # Wikipedia knowledge retrieval
 ```
 
 ---
 
-# Troubleshooting
+## 🛠️ API Reference
 
-## `ModuleNotFoundError: No module named 'main_agent'`
+### Main Service (`:8000`)
+- **`GET /api/health`**: Health status check.
+  ```json
+  {"status": "ok", "app": "ShoeShack"}
+  ```
+- **`POST /api/chat`**: Send messages to the ReAct agent.
+  ```json
+  {
+    "query": "Show running shoes under 2000",
+    "user_id": "user_1"
+  }
+  ```
 
-You ran the UI with plain `python`. Use `streamlit run` instead:
+### SQL Agent (`:8002`)
+- **`POST /invoke`**: Direct NL query to catalog pipeline.
+  ```json
+  {
+    "query": "Show Nike shoes",
+    "user_id": "user_1"
+  }
+  ```
 
-```bash
-uv run streamlit run main_agent/ui/app.py
-```
-
-## ChromaDB dimension mismatch
-
-If you swap embedding models, delete the persistent store and re-ingest:
-
-```bash
-rm -rf rag/chroma_db
-cd rag && uv run --package rag python ingest.py
-```
-
-## Port already in use
-
-```bash
-lsof -i :8001   # or :8002 / :8501
-kill -9 <PID>
-```
-
----
-
-# Observability
-
-LangSmith tracing is enabled when `LANGCHAIN_TRACING_V2=true` and
-`LANGSMITH_API_KEY` are present in `.env`.
+### MCP Service (`:8001`)
+- **`GET /sse`**: FastMCP Server-Sent Events endpoint for tool execution.
 
 ---
 
-# License
+## 📄 License
 
-MIT
+This project is licensed under the [MIT License](LICENSE).

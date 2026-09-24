@@ -12,20 +12,22 @@ from main_agent.prompts import SYSTEM_PROMPT
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env")
 
-GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
-
 _react_agent = None
 
 
 def get_agent():
     global _react_agent
+    if _react_agent is not None:
+        return _react_agent
+
     load_dotenv(PROJECT_ROOT / ".env", override=True)
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
-        raise ValueError("GROQ_API_KEY is not set. Please add GROQ_API_KEY to your .env file or Streamlit sidebar.")
+        raise ValueError("GROQ_API_KEY is not set. Please add GROQ_API_KEY to your .env file.")
     model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
     llm = ChatGroq(model=model, temperature=0, api_key=api_key)
-    return create_react_agent(llm, ALL_TOOLS)
+    _react_agent = create_react_agent(llm, ALL_TOOLS)
+    return _react_agent
 
 
 def run(query: str, user_id: str = "user_1") -> dict:

@@ -15,7 +15,7 @@ from prompts import SQL_SYSTEM_PROMPT
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env")
 
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+
 class SQLState(TypedDict, total=False):
     query: str
     sql: str
