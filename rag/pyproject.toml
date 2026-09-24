@@ -1,0 +1,12 @@
+[project]
+name = "rag"
+version = "0.1.0"
+
+dependencies = [
+    "chromadb>=0.5.5",
+    "sentence-transformers>=2.7.0",
+    "transformers>=4.41.2",
+    "tokenizers>=0.19.1",
+    "onnxruntime>=1.16.3",
+    "pandas",
+]
