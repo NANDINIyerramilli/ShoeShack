@@ -1,0 +1,20 @@
+[project]
+name = "main_agent"
+version = "0.1.0"
+dependencies = [
+    "langchain",
+    "langchain-community",
+    "langgraph",
+    "langchain-groq",
+    "groq",
+    "requests",
+    "fastmcp",
+    "python-dotenv",
+    "streamlit>=1.57.0",
+    "wikipedia",
+    "arxiv",
+    "duckduckgo-search",
+    "ddgs",
+    "chromadb>=0.5.5",
+    "sentence-transformers>=2.7.0",
+]
