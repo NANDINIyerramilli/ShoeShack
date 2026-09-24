@@ -1,0 +1,13 @@
+[project]
+name = "sql_agent"
+version = "0.1.0"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "langchain",
+    "langgraph",
+    "langchain-groq",
+    "groq",
+    "pydantic",
+    "python-dotenv",
+]
