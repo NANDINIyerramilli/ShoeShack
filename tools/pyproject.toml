@@ -1,0 +1,9 @@
+[project] 
+name = "tools" 
+version = "0.1.0" 
+dependencies = [ 
+"langchain-community",
+"wikipedia", 
+"arxiv", 
+"duckduckgo-search" 
+]
